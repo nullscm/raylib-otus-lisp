@@ -1,4 +1,5 @@
 (import (file xml) (owl string) (scheme file))
+
 (define (tokenize l)
   (let loop ((t '()) (l l))
     (if (pair? l)
@@ -7,29 +8,45 @@
           (cons (reverse t) (loop '() (cdr l)))
           (loop (cons (car l) t) (cdr l))))
       (if (null? t) '() (list (reverse t))))))
+
 (define (string-split s)
   (map list->string (tokenize (string->list s))))
+
 (define xml
   (xml-get-root-element
     (xml-parse-file "raylib_api.xml")))
+
 (define enums (xml-get-subtags xml 'Enums))
-(define enums
-  (xml-get-subtags (ref enums 1) 'Enum))
+
+(define enums (xml-get-subtags (ref enums 1) 'Enum))
+
 (define defines (xml-get-subtags xml 'Defines))
-(define defines
-  (xml-get-subtags (ref defines 1) 'Define))
+
+(define defines (xml-get-subtags (ref defines 1) 'Define))
+
 (define aliases (xml-get-subtags xml 'Aliases))
-(define aliases
-  (xml-get-subtags (ref aliases 1) 'Alias))
+
+(define aliases (xml-get-subtags (ref aliases 1) 'Alias))
+
 (define funcs (xml-get-subtags xml 'Functions))
-(define funcs
-  (xml-get-subtags (ref funcs 1) 'Function))
-(define funcs (filter (lambda (x) (equal? "void" (cdr (assoc 'retType (ff->alist (cadr (vector->list x))))))) funcs))
+
+(define funcs (xml-get-subtags (ref funcs 1) 'Function))
+
+(define funcs (filter (lambda (func)
+      (define attributes (ref func 2))
+      (define refType (attributes 'retType ""))
+      (or
+         (string-eq? "void" refType)
+         (string-eq? "bool" refType)))
+   funcs))
+
 (define (getty x y)
   (cdr (assoc x (ff->alist (cadr (vector->list y))))))
+
 (define (show x y port)
   (if (not (equal? (getty x y) #f))
     (display (getty x y) port)))
+
 (define %param-blacklist
   (list "Ray"
         "Ray *"
@@ -80,6 +97,7 @@
         "const Matrix *"
         "LoadFileDataCallback"
         "FilePathList"))
+
 (define (show-param-types params port)
   (for-each
     (lambda (param)
@@ -88,7 +106,7 @@
         (cond ((member type %param-blacklist)
                (display " fft-enum" port))
               ((equal? "const char *" type)
-               (display " fft-char" port))
+               (display " type-string" port)) ; Special case: string marshaling require `type-string`
               ((equal? "float *" type)
                (display " fft-float" port))
               ((equal? "void *" type)
@@ -112,11 +130,13 @@
               (else
                (display (string-append " fft-" type) port)))))
     (car (cddr (vector->list params)))))
+
 (define (generate-functionnames port)
   (for-each
     (lambda (x)
       (begin (show 'name x port) (display "\n" port)))
     funcs))
+
 (define (generate-functions port)
   (for-each
     (lambda (x)
@@ -131,14 +151,13 @@
         (show-param-types x port)
         (display "))\n" port)))
     funcs))
-(define port (open-output-file "raylib.lisp"))
-(display
-  "(define *path* (cons \"..\" *path*)) (define-library (lib raylib) (import (otus lisp) (otus ffi)) (export \n"
-  port)
+
+(define port (open-output-file "lib/raylib.scm"))
+
+(display "(define-library (lib raylib) (import (otus lisp) (otus ffi)) (export \n" port)
 (generate-functionnames port)
 (display
-  ")(cond-expand (Linux (begin (define raylib (load-dynamic-library \"/tmp/raylib/src/libraylib.so\")) (define raylib-err \"Use, for example, sudo apt install libraylib.so\"))) (else (runtime-error \"nsupported platform\" (uname)))) (begin (if (not raylib) (runtime-error \"Can't load raylib library.\" raylib-err))"
-  port)
+  ")(cond-expand (Linux (begin (define raylib (load-dynamic-library \"libraylib.so\")) (define raylib-err \"Use, for example, sudo apt install libraylib.so\"))) (else (runtime-error \"nsupported platform\" (uname)))) (begin (if (not raylib) (runtime-error \"Can't load raylib library.\" raylib-err))" port)
 (generate-functions port)
 (display "))" port)
 (close-port port)

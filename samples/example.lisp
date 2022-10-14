@@ -1,0 +1,17 @@
+#!/usr/bin/env ol
+
+(import (lib raylib))
+(define LIGHTGRAY #xc8c8c8ff)
+(define RAYWHITE #xf5f5f5ff)
+
+(InitWindow 640 480 "raylib [core] example - basic window")
+
+(let loop ((close (WindowShouldClose)))
+   (unless close
+      (BeginDrawing)
+      (ClearBackground RAYWHITE)
+      (DrawText "Congrats! You created your first window!" 190 200 20 LIGHTGRAY)
+      (EndDrawing)
+      (loop (WindowShouldClose))))
+
+(CloseWindow)
