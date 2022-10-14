@@ -1,12 +1,4 @@
-1. Build raylib as shared library
+1. Build raylib as shared library and append to LD_PRELOAD path
 
-cd /tmp
-git clone https://github.com/raysan5/raylib/
-cd raylib/src/
-# needed gcc git alsa-lib mesa xorg.libX11 xorg.libXrandr xorg.libXi xorg.libXcursor xorg.libXinerama xorg.xinput xorg.libXext.dev libGL libGLU libglvnd 
-make PLATFORM=PLATFORM_DESKTOP RAYLIB_LIBTYPE=SHARED
-# with nix-shell:
-nix-shell -p gcc git alsa-lib mesa xorg.libX11 xorg.libXrandr xorg.libXi xorg.libXcursor xorg.libXinerama xorg.xinput xorg.libXext.dev libGL libGLU libglvnd  --run "make PLATFORM=PLATFORM_DESKTOP RAYLIB_LIBTYPE=SHARED"
-
-2. Run generate-raylib.lisp with ol
+2. Run generate-raylib.lisp
 
