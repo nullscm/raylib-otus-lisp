@@ -1,4 +1,4 @@
-1. Build raylib as shared library and append to LD_PRELOAD path
+1. Build raylib as shared library and append to $LD_LIBRARY_PATH
 
 2. Run generate-raylib.lisp
 

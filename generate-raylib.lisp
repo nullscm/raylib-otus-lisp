@@ -148,7 +148,7 @@
         (display "))\n" port)))
     funcs))
 
- (syscall 1017 (c-string "mkdir lib") #f #f))
+;;(syscall 1017 (c-string "mkdir lib") #f #f))
 
 (define port (open-output-file "lib/raylib.scm"))
 (display "(define-library (lib raylib) (import (otus lisp) (otus ffi)) (export \n" port)
@@ -159,6 +159,6 @@
 (display "))" port)
 (close-port port)
 
-(if (file-exists? "raylib_api.xml") (syscall 1017 (c-string "rm raylib_api.xml") #f #f))
+;;(if (file-exists? "raylib_api.xml") (syscall 1017 (c-string "rm raylib_api.xml") #f #f))
 
 
