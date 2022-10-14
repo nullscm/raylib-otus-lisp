@@ -148,14 +148,19 @@
         (display "))\n" port)))
     funcs))
 
-;;(syscall 1017 (c-string "mkdir lib") #f #f))
-
+(define %colors '((LIGHTGRAY  200 200 200 255) (GRAY 130 130 130 255) (DARKGRAY 80 80 80 255) (YELLOW 253 249 0 255) (GOLD 255 203 0 255) (ORANGE 255 161 0 255) (PINK 255 109 194 255) (RED 230 41 55 255) (MAROON 190 33 55 255) (GREEN 0 228 48 255) (LIME 0 158 47 255) (DARKGREEN 0 117 44 255) (SKYBLUE 102 191 255 255) (BLUE 0 121 241 255) (DARKBLUE 0 82 172 255) (PURPLE 200 122 255 255) (VIOLET 135 60 190 255) (DARKPURPLE 112 31 126 255) (BEIGE 211 176 131 255) (BROWN 127 106 79 255) (DARKBROWN  76 63 47 255) (WHITE 255 255 255 255) (BLACK 0 0 0 255) (BLANK 0 0 0 0) (MAGENTA 255 0 255 255) (RAYWHITE 245 245 245 255)))
+(define (generate-colors port) (for-each (lambda (x) (display "(define " port)(display (car x) port) (display " (rgba->hex" port) (for-each (lambda (y)(display " " port) (display y port)) (cdr x)) (display "))" port)) %colors))
+(syscall 1017 (c-string "mkdir lib") #f #f))
 (define port (open-output-file "lib/raylib.scm"))
 (display "(define-library (lib raylib) (import (otus lisp) (otus ffi)) (export \n" port)
+(for-each (lambda (x) (display (car x) port) (display "\n" port)) %colors)
+(display "rgba->hex \n" port)
 (generate-functionnames port)
 (display
   ")(cond-expand (Linux (begin (define raylib (load-dynamic-library \"libraylib.so\")) (define raylib-err \"Use, for example, sudo apt install libraylib.so\"))) (else (runtime-error \"nsupported platform\" (uname)))) (begin (if (not raylib) (runtime-error \"Can't load raylib library.\" raylib-err))" port)
 (generate-functions port)
+(display "(define (rgba->hex r g b a) (string->number (string-append (number->string r 16) (number->string g 16) (number->string b 16) (number->string a 16)) 16))" port)
+(generate-colors port)
 (display "))" port)
 (close-port port)
 

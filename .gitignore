@@ -1,2 +1,3 @@
 *.xml
 lib/
+test.lisp
