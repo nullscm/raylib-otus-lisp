@@ -1,5 +1,5 @@
+#!/usr/bin/env ol
 (import (file xml) (owl string) (scheme file))
-
 (define (tokenize l)
   (let loop ((t '()) (l l))
     (if (pair? l)
@@ -12,24 +12,24 @@
 (define (string-split s)
   (map list->string (tokenize (string->list s))))
 
+(if (not (file-exists? "raylib_api.xml")) 
+  (syscall 1017 (c-string "wget https://raw.githubusercontent.com/raysan5/raylib/master/parser/output/raylib_api.xml")
+           #f #f))
+
 (define xml
   (xml-get-root-element
     (xml-parse-file "raylib_api.xml")))
 
 (define enums (xml-get-subtags xml 'Enums))
-
 (define enums (xml-get-subtags (ref enums 1) 'Enum))
 
 (define defines (xml-get-subtags xml 'Defines))
-
 (define defines (xml-get-subtags (ref defines 1) 'Define))
 
 (define aliases (xml-get-subtags xml 'Aliases))
-
 (define aliases (xml-get-subtags (ref aliases 1) 'Alias))
 
 (define funcs (xml-get-subtags xml 'Functions))
-
 (define funcs (xml-get-subtags (ref funcs 1) 'Function))
 
 (define funcs (filter (lambda (func)
