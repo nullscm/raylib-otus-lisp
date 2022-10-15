@@ -183,6 +183,18 @@
         (cdr x))
       (display "))" port))
     %colors))
+
+(define %keys
+  '((KEY_RIGHT . 262)
+    (KEY_LEFT  . 263)
+    (KEY_DOWN  . 264)
+    (KEY_UP    . 265)))
+(define (generate-keys port)
+  (for-each
+    (lambda (x)
+      (print-to port "(define " (car x) " " (cdr x) ")"))
+    %keys))
+
 (syscall 1017 (c-string "mkdir lib") #f #f)
 (define port (open-output-file "lib/raylib.scm"))
 (display
@@ -193,6 +205,10 @@
     (display (car x) port)
     (display "\n" port))
   %colors)
+(for-each
+  (lambda (x)
+    (print-to port (car x)))
+  %keys)
 (display "rgba->hex \n" port)
 (generate-functionnames port)
 (display
@@ -203,5 +219,6 @@
   "(define (rgba->hex r g b a) (string->number (string-append (number->string r 16) (number->string g 16) (number->string b 16) (number->string a 16)) 16))"
   port)
 (generate-colors port)
+(generate-keys port)
 (display "))" port)
 (close-port port)
