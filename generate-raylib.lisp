@@ -209,9 +209,8 @@
 (print-to port
   "(define Vector2 (list fft-float fft-float))")
 (generate-functions port)
-(display
-  "(define (rgba->hex r g b a) (string->number (string-append (number->string r 16) (number->string g 16) (number->string b 16) (number->string a 16)) 16))"
-  port)
+(print-to port
+  "(define (rgba->hex r g b a) (+ (<< a 24) (<< b 16) (<< g 8) r))")
 
 ; Defines
 (print-to port)
