@@ -53,7 +53,6 @@
         "Texture2D *"
         "GlyphInfo *"
         "GlyphInfo"
-        "Vector2"
         "Camera"
         "Camera2D"
         "Camera3D"
@@ -115,6 +114,8 @@
                (display " fft-int*" port))
               ((equal? "char *" type)
                (display " fft-char" port))
+              ((equal? "Vector2" type)
+               (display " Vector2" port))
               ((equal? "unsigned" (car (string-split type)))
                (display
                  (string-append
@@ -183,6 +184,18 @@
         (cdr x))
       (display "))" port))
     %colors))
+
+(define %keys
+  '((KEY_RIGHT . 262)
+    (KEY_LEFT  . 263)
+    (KEY_DOWN  . 264)
+    (KEY_UP    . 265)))
+(define (generate-keys port)
+  (for-each
+    (lambda (x)
+      (print-to port "(define " (car x) " " (cdr x) ")"))
+    %keys))
+
 (syscall 1017 (c-string "mkdir lib") #f #f)
 (define port (open-output-file "lib/raylib.scm"))
 (display
@@ -193,15 +206,21 @@
     (display (car x) port)
     (display "\n" port))
   %colors)
+(for-each
+  (lambda (x)
+    (print-to port (car x)))
+  %keys)
 (display "rgba->hex \n" port)
 (generate-functionnames port)
-(display
-  ")(cond-expand (Linux (begin (define raylib (load-dynamic-library \"libraylib.so\")) (define raylib-err \"Use, for example, sudo apt install libraylib.so\"))) (else (runtime-error \"nsupported platform\" (uname)))) (begin (if (not raylib) (runtime-error \"Can't load raylib library.\" raylib-err))"
-  port)
+(print-to port
+  ")(cond-expand (Linux (begin (define raylib (load-dynamic-library \"libraylib.so\")) (define raylib-err \"Use, for example, sudo apt install libraylib.so\"))) (else (runtime-error \"nsupported platform\" (uname)))) (begin (if (not raylib) (runtime-error \"Can't load raylib library.\" raylib-err))")
+(print-to port
+  "(define Vector2 (list fft-float fft-float))")
 (generate-functions port)
 (display
   "(define (rgba->hex r g b a) (string->number (string-append (number->string r 16) (number->string g 16) (number->string b 16) (number->string a 16)) 16))"
   port)
 (generate-colors port)
+(generate-keys port)
 (display "))" port)
 (close-port port)
