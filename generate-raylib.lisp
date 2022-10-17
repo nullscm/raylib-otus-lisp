@@ -20,8 +20,11 @@
 (define defines (xml-get-subtags (ref defines 1) 'Define))
 (define aliases (xml-get-subtags xml 'Aliases))
 (define aliases (xml-get-subtags (ref aliases 1) 'Alias))
+(define structs (xml-get-subtags xml 'Structs))
+(define structs (xml-get-subtags (ref structs 1) 'Struct))
 (define funcs (xml-get-subtags xml 'Functions))
 (define funcs (xml-get-subtags (ref funcs 1) 'Function))
+
 (define funcs
   (filter
     (lambda (func)
@@ -55,6 +58,7 @@
               (else
                 (display (string-append " fft-" type) port)))))
     (car (cddr (vector->list lst)))))
+
 ;;;; Generate lib/raylib.scm file
 ;; create ./lib directory
 (if (not (file-exists? "lib")) (syscall 1017 (c-string "mkdir lib") #f #f))
@@ -77,8 +81,9 @@
           enums)
 
 (print-to port "rgba->hex")
-(print-to port "Vector2")
-(print-to port "Vector3")
+
+;; Structnames
+(for-each (lambda (struct) (print-to port (xml-get-attribute struct 'name ""))) structs)
 
 ;; Functionnames
 (for-each (lambda (func) (print-to port (xml-get-attribute func 'name ""))) funcs)
@@ -107,6 +112,18 @@
                         (display-to port  (string-append " \"" name "\""))
                         (display-types-to port x) (print-to port "))")))
           funcs)
+
+;; Structs 
+(print-to port) (print-to port ";;;; Structs")
+(for-each (lambda (x) (let ((name (xml-get-attribute x 'name #f)) 
+                            (field (xml-get-subtags x 'Field )))
+                        (print-to port ";; " (xml-get-attribute x 'desc #f))
+                        (display-to port (string-append "(define " name ))
+                        (for-each (lambda (f) ;;(display-types-to port f)
+                                    (display (getf 'name f))
+
+                                    ) field)
+                        (print-to port "))"))) structs)
 
 ;; Enums
 (print-to port) (print-to port ";;;; Enums")
