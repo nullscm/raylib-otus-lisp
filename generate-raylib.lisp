@@ -96,15 +96,16 @@
 
 ;; Functions
 (print-to port) (print-to port ";;;; Functions")
-(for-each (lambda (x) 
-            (print-to port ";; " (xml-get-attribute x 'desc #f))
-            (display-to port (string-append "(define " (xml-get-attribute x 'name #f) " (raylib "))
-            (cond ((or (equal? (xml-get-attribute x 'retType #t) "void")
-                       (equal? (xml-get-attribute x 'retType #t) "bool"))
-                   (display-to port (string-append "fft-" (xml-get-attribute x 'retType #f)))) 
-                  (else (display-to port  (xml-get-attribute x 'retType #f))))
-            (display-to port  (string-append " \"" (xml-get-attribute x 'name #f) "\""))
-            (display-types-to port x) (print-to port "))")) 
+(for-each (lambda (x) (let ((name (xml-get-attribute x 'name #f)) 
+                            (retType (xml-get-attribute x 'retType #t)))
+                        (print-to port ";; " (xml-get-attribute x 'desc #f))
+                        (display-to port (string-append "(define " name " (raylib "))
+                        (cond ((or (equal? retType "void")
+                                   (equal? retType "bool"))
+                               (display-to port (string-append "fft-" retType))) 
+                              (else (display-to port retType)))
+                        (display-to port  (string-append " \"" name "\""))
+                        (display-types-to port x) (print-to port "))")))
           funcs)
 
 ;; Enums
