@@ -2,17 +2,11 @@
 
 ;; filter numbers from string
 (define (digit? x) (<= #\0 x #\9))
-(define (number-filter lst)
-  (cond ((null? lst) lst)
-        ((or (eq? #\space (car lst)) (digit? (car lst))) (cons (car lst) (number-filter (cdr lst)))) 
-        (else
-          (number-filter (cdr lst)))))
+(define (number-filter lst) (cond ((null? lst) lst) ((or (eq? #\space (car lst)) (digit? (car lst))) (cons (car lst) (number-filter (cdr lst)))) (else (number-filter (cdr lst)))))
 (define filter-numbers (lambda (lst) (list->string (number-filter (string->list lst)))))
 
-;; tokenize string based on #\space
-(define (tokenize l) (let loop ((t '()) (l l)) (if (pair? l) (let ((c (car l))) (if (char=? c #\space) (cons (reverse t) (loop '() (cdr l))) (loop (cons (car l) t) (cdr l)))) (if (null? t) '() (list (reverse t))))))
-
 ;; split string by #\space
+(define (tokenize l) (let loop ((t '()) (l l)) (if (pair? l) (let ((c (car l))) (if (char=? c #\space) (cons (reverse t) (loop '() (cdr l))) (loop (cons (car l) t) (cdr l)))) (if (null? t) '() (list (reverse t))))))
 (define (string-split s) (map list->string (tokenize (string->list s))))
 
 ;; download raylib_api.xml
