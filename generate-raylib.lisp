@@ -15,10 +15,6 @@
 ;; split string by #\space
 (define (string-split s) (map list->string (tokenize (string->list s))))
 
-;; Todo: Replace in the future/simplify
-(define (getty x y) (cdr (assoc x (ff->alist (cadr (vector->list y))))))
-(define (show x y port) (if (not (equal? (getty x y) #f)) (display (getty x y) port)))
-
 ;; download raylib_api.xml
 (if (not (file-exists? "raylib_api.xml")) (syscall 1017 (c-string "wget https://raw.githubusercontent.com/raysan5/raylib/master/parser/output/raylib_api.xml") #f #f))
 
@@ -38,55 +34,33 @@
       (define attributes (ref func 2))
       (define refType (attributes 'retType ""))
       (or (string-eq? "void" refType)
+          (string-eq? "Vector2" refType)
+          (string-eq? "Vector3" refType)
           (string-eq? "bool" refType)))
     funcs))
 
-(define %convert-to-fft-enum
-  (list "Ray" "Ray *" "Camera *" "Rectangle" "Texture2D" "Texture2D *" "GlyphInfo *" "GlyphInfo" "Camera" "Camera2D" "Camera3D" "Font" "Vector2 *" "Color" "Image *" "Image" "Vector3" "Mesh *" "Model" "BoundingBox" "ModelAnimation" "Model *" "ModelAnimation *" "Vector3 *" "Sound" "Wave" "Material" "Matrix" "Music" "AudioStream" "AudioCallback" "Color *" "Shader" "RenderTexture2D" "VrStereoConfig" "..." "Mesh" "TraceLogCallback" "SaveFileTextCallback" "Material *" "bool" "SaveFileDataCallback" "LoadFileTextCallback" "NPatchInfo" "Wave *" "const Matrix *" "LoadFileDataCallback" "FilePathList"))
+(define %convert-to-fft-enum (list "Ray" "Ray *" "Camera *" "Rectangle" "Texture2D" "Texture2D *" "GlyphInfo *" "GlyphInfo" "Camera" "Camera2D" "Camera3D" "Font" "Vector2 *" "Color" "Image *" "Image" "Vector3" "Mesh *" "Model" "BoundingBox" "ModelAnimation" "Model *" "ModelAnimation *" "Vector3 *" "Sound" "Wave" "Material" "Matrix" "Music" "AudioStream" "AudioCallback" "Color *" "Shader" "RenderTexture2D" "VrStereoConfig" "..." "Mesh" "TraceLogCallback" "SaveFileTextCallback" "Material *" "bool" "SaveFileDataCallback" "LoadFileTextCallback" "NPatchInfo" "Wave *" "const Matrix *" "LoadFileDataCallback" "FilePathList"))
 
-(define (show-param-types params port)
+(define (display-types-to port lst)
   (for-each
     (lambda (param)
       (let* ((t (assoc 'type (ff->alist (ref param 2))))
              (type (if (pair? t) (cdr t) t)))
         (cond ((member type %convert-to-fft-enum) (display " fft-enum" port))
               ((equal? "const char *" type) (display " type-string" port))
-              ((equal? "float *" type) (display " fft-float" port))
+              ((equal? "float *" type) (display  " fft-float" port))
               ((equal? "void *" type) (display " fft-void*" port))
               ((equal? "const void *" type) (display " fft-void*" port))
               ((equal? "const int *" type) (display " fft-int*" port))
               ((equal? "int *" type) (display " fft-int*" port))
               ((equal? "char *" type) (display " fft-char" port))
               ((equal? "Vector2" type) (display " Vector2" port))
+              ((equal? "Vector3" type) (display " Vector3" port))
               ((equal? "unsigned" (car (string-split type)))
-               (display-to port (string-append " fft-" (car (string-split type)) "-" (cadr (string-split type)))))
+               (display (string-append " fft-" (car (string-split type)) "-" (cadr (string-split type))) port))
               (else
-                (display-to port (string-append " fft-" type) )))))
-    (car (cddr (vector->list params)))))
-
-;; get void and bool names
-(define (generate-functionnames port)
-  (for-each
-    (lambda (x)
-      (begin (show 'name x port) (display "\n" port)))
-    funcs))
-
-;; void generator
-(define (generate-functions port)
-  (for-each
-    (lambda (x)
-      (begin
-        (display "(define " port)
-        (show 'name x port)
-        (display " (raylib fft-" port)
-        (show 'retType x port)
-        (display " \"" port)
-        (show 'name x port)
-        (display "\"" port)
-        (show-param-types x port)
-        (display "))\n" port)))
-    funcs))
-
+                (display (string-append " fft-" type) port)))))
+    (car (cddr (vector->list lst)))))
 ;;;; Generate lib/raylib.scm file
 ;; create ./lib directory
 (if (not (file-exists? "lib")) (syscall 1017 (c-string "mkdir lib") #f #f))
@@ -108,21 +82,36 @@
                       (xml-get-subtags enum 'Value)))
           enums)
 
-(display "rgba->hex \n" port)
+(print-to port "rgba->hex")
+(print-to port "Vector2")
+(print-to port "Vector3")
 
 ;; Functionnames
-(generate-functionnames port)
+(for-each (lambda (func) (print-to port (xml-get-attribute func 'name ""))) funcs)
+
 (print-to port ")(cond-expand (Linux (begin (define raylib (load-dynamic-library \"libraylib.so\")) (define raylib-err \"Use, for example, sudo apt install libraylib.so\"))) (else (runtime-error \"nsupported platform\" (uname)))) (begin (if (not raylib) (runtime-error \"Can't load raylib library.\" raylib-err))")
 
 ;; Vector2 
 (print-to port) (print-to port "(define Vector2 (list fft-float fft-float))")
 
+;; Vector3 
+(print-to port) (print-to port "(define Vector3 (list fft-float fft-float fft-float))")
+
 ;; rgba->hex
 (print-to port) (print-to port "(define (rgba->hex r g b a) (+ (<< a 24) (<< b 16) (<< g 8) r))")
 
 ;; Functions
-(print-to port) (print-to port ";;;; Voids & Bools")
-(generate-functions port)
+(print-to port) (print-to port ";;;; Functions")
+(for-each (lambda (x) 
+            (print-to port ";; " (xml-get-attribute x 'desc #f))
+            (display-to port (string-append "(define " (xml-get-attribute x 'name #f) " (raylib "))
+            (cond ((or (equal? (xml-get-attribute x 'retType #t) "void")
+                       (equal? (xml-get-attribute x 'retType #t) "bool"))
+                   (display-to port (string-append "fft-" (xml-get-attribute x 'retType #f)))) 
+                  (else (display-to port  (xml-get-attribute x 'retType #f))))
+            (display-to port  (string-append " \"" (xml-get-attribute x 'name #f) "\""))
+            (display-types-to port x) (print-to port "))")) 
+          funcs)
 
 ;; Enums
 (print-to port) (print-to port ";;;; Enums")
