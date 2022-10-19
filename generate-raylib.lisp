@@ -36,7 +36,64 @@
           (string-eq? "bool" refType)))
     funcs))
 
-(define %convert-to-fft-enum (list "Ray" "Ray *" "Camera *" "Rectangle" "Texture2D" "Texture2D *" "GlyphInfo *" "GlyphInfo" "Camera" "Camera2D" "Camera3D" "Font" "Vector2 *" "Color" "Image *" "Image" "Vector3" "Mesh *" "Model" "BoundingBox" "ModelAnimation" "Model *" "ModelAnimation *" "Vector3 *" "Sound" "Wave" "Material" "Matrix" "Music" "AudioStream" "AudioCallback" "Color *" "Shader" "RenderTexture2D" "VrStereoConfig" "..." "Mesh" "TraceLogCallback" "SaveFileTextCallback" "Material *" "bool" "SaveFileDataCallback" "LoadFileTextCallback" "NPatchInfo" "Wave *" "const Matrix *" "LoadFileDataCallback" "FilePathList"))
+(define %convert-to-fft-enum
+  (list "AudioCallback"
+        "AudioStream"
+        "BoneInfo *"
+        "bool"
+        "BoundingBox"
+        "Camera *"
+        "Camera2D"
+        "Camera3D"
+        "Color *"
+        "const Matrix *"
+        "FilePathList"
+        "Font"
+        "GlyphInfo *"
+        "GlyphInfo"
+        "Image *"
+        "Image"
+        "LoadFileDataCallback"
+        "LoadFileTextCallback"
+        "Material *"
+        "Material"
+        "MaterialMap *"
+        "Matrix"
+        "Mesh *"
+        "Mesh"
+        "Model *"
+        "Model"
+        "ModelAnimation *"
+        "ModelAnimation"
+        "Music"
+        "NPatchInfo"
+        "rAudioBuffer *"
+        "rAudioProcessor *"
+        "Ray *"
+        "RenderTexture2D"
+        "SaveFileDataCallback"
+        "SaveFileTextCallback"
+        "Texture2D *"
+        "TraceLogCallback"
+        "Transform *"
+        "Transform **"
+        "Vector2 *"
+        "Vector3 *"
+        "VrStereoConfig"
+        "Wave *"
+        "..."))
+
+(define %convert-to-struct
+  (list "Camera"
+        "Color"
+        "Quaternion"
+        "Ray"
+        "Rectangle"
+        "Shader"
+        "Sound"
+        "Texture2D"
+        "Vector2"
+        "Vector3"))
 
 (define (display-types-to port lst)
   (for-each
@@ -44,22 +101,26 @@
       (let* ((t  (xml-get-attribute param 'type #f))
              (type (if (pair? t) (cdr t) t)))
         (cond ((member type %convert-to-fft-enum) (display " fft-enum" port))
+              ((member type %convert-to-struct) (display (string-append " " type) port))
               ((equal? "const char *" type) (display " type-string" port))
+              ((equal? "char[32]" type) (display " type-string" port))
+              ((equal? "Matrix[2]" type) (display  " Matrix" port))
               ((equal? "float *" type) (display  " fft-float" port))
+              ((equal? "float[4]" type) (display  " fft-float" port))
+              ((equal? "float[2]" type) (display  " fft-float" port))
               ((equal? "void *" type) (display " fft-void*" port))
               ((equal? "const void *" type) (display " fft-void*" port))
               ((equal? "const int *" type) (display " fft-int*" port))
               ((equal? "int *" type) (display " fft-int*" port))
               ((equal? "char *" type) (display " fft-char" port))
-              ((equal? "Vector2" type) (display " Vector2" port))
-              ((equal? "Vector3" type) (display " Vector3" port))
               ((equal? "unsigned" (car (string-split type)))
                (display (string-append " fft-" (car (string-split type)) "-" (cadr (string-split type))) port))
-              (else
-                (display (string-append " fft-" type) port)))))
+              (else (display (string-append " fft-" type) port)))))
     (car (cddr (vector->list lst)))))
 
+
 ;;;; Generate lib/raylib.scm file
+
 ;; create ./lib directory
 (if (not (file-exists? "lib")) (syscall 1017 (c-string "mkdir lib") #f #f))
 (define port (open-output-file "lib/raylib.scm"))
@@ -74,7 +135,7 @@
   defines)
 
 ;; Enums
-(for-each (lambda (enum)
+(for-each (lambda (enum) 
             (for-each (lambda (value)
                         (print-to port (xml-get-attribute value 'name "")))
                       (xml-get-subtags enum 'Value)))
@@ -89,7 +150,6 @@
 (for-each (lambda (func) (print-to port (xml-get-attribute func 'name ""))) funcs)
 
 (print-to port ")(cond-expand (Linux (begin (define raylib (load-dynamic-library \"libraylib.so\")) (define raylib-err \"Use, for example, sudo apt install libraylib.so\"))) (else (runtime-error \"nsupported platform\" (uname)))) (begin (if (not raylib) (runtime-error \"Can't load raylib library.\" raylib-err))")
-
 
 ;; rgba->hex
 (print-to port) (print-to port ";; RGBa->HEX helper\n(define (rgba->hex r g b a) (+ (<< a 24) (<< b 16) (<< g 8) r))")
@@ -111,8 +171,8 @@
 ;; Structs 
 (print-to port) (print-to port ";;;; Structs")
 (for-each (lambda (x) (print-to port ";; " (xml-get-attribute x 'desc #f))
-                        (display-to port (string-append "(define " (xml-get-attribute x 'name #f)))
-                        (display-to port " (list") (display-types-to port x) (print-to port "))")) 
+            (display-to port (string-append "(define " (xml-get-attribute x 'name #f)))
+            (display-to port " (list") (display-types-to port x) (print-to port "))")) 
           structs)
 
 ;; Enums
