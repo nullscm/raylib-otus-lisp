@@ -43,8 +43,6 @@
         "bool"
         "BoundingBox"
         "Camera *"
-        "Camera2D"
-        "Camera3D"
         "Color *"
         "const Matrix *"
         "FilePathList"
@@ -74,6 +72,7 @@
         "Rectangle *"
         "SaveFileDataCallback"
         "SaveFileTextCallback"
+        "Texture2D"
         "Texture2D *"
         "TraceLogCallback"
         "Transform *"
@@ -82,20 +81,21 @@
         "Vector3 *"
         "VrStereoConfig"
         "Wave *"
+        "Quaternion"
         "..."))
 
 (define %convert-to-struct
-  (list "Camera"
+  (list "Camera2D"
+        "Camera3D"
         "Color"
-        "Quaternion"
         "Ray"
         "Rectangle"
         "Shader"
         "Sound"
         "Texture"
-        "Texture2D"
         "Vector2"
-        "Vector3"))
+        "Vector3"
+        "Wave"))
 
 (define (display-types-to port lst)
   (for-each
@@ -106,7 +106,9 @@
               ((member type %convert-to-struct) (display (string-append " " type) port))
               ((equal? "const char *" type) (display " type-string" port))
               ((equal? "char[32]" type) (display " type-string" port))
+              ((equal? "char **" type) (display " type-string" port))
               ((equal? "Matrix[2]" type) (display  " Matrix" port))
+              ((equal? "Camera" type) (display  " Camera3D" port))
               ((equal? "float *" type) (display  " fft-float" port))
               ((equal? "float[4]" type) (display  " fft-float" port))
               ((equal? "float[2]" type) (display  " fft-float" port))
