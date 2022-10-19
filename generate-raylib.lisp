@@ -71,6 +71,7 @@
         "rAudioProcessor *"
         "Ray *"
         "RenderTexture2D"
+        "Rectangle *"
         "SaveFileDataCallback"
         "SaveFileTextCallback"
         "Texture2D *"
@@ -91,6 +92,7 @@
         "Rectangle"
         "Shader"
         "Sound"
+        "Texture"
         "Texture2D"
         "Vector2"
         "Vector3"))
@@ -154,6 +156,13 @@
 ;; rgba->hex
 (print-to port) (print-to port ";; RGBa->HEX helper\n(define (rgba->hex r g b a) (+ (<< a 24) (<< b 16) (<< g 8) r))")
 
+;; Structs 
+(print-to port) (print-to port ";;;; Structs")
+(for-each (lambda (x) (print-to port ";; " (xml-get-attribute x 'desc #f))
+            (display-to port (string-append "(define " (xml-get-attribute x 'name #f)))
+            (display-to port " (list") (display-types-to port x) (print-to port "))")) 
+          structs)
+
 ;; Functions
 (print-to port) (print-to port ";;;; Functions")
 (for-each (lambda (x) (let ((name (xml-get-attribute x 'name #f)) 
@@ -167,13 +176,6 @@
                         (display-to port  (string-append " \"" name "\""))
                         (display-types-to port x) (print-to port "))")))
           funcs)
-
-;; Structs 
-(print-to port) (print-to port ";;;; Structs")
-(for-each (lambda (x) (print-to port ";; " (xml-get-attribute x 'desc #f))
-            (display-to port (string-append "(define " (xml-get-attribute x 'name #f)))
-            (display-to port " (list") (display-types-to port x) (print-to port "))")) 
-          structs)
 
 ;; Enums
 (print-to port) (print-to port ";;;; Enums")
