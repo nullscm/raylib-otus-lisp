@@ -41,7 +41,7 @@
 (define (display-types-to port lst)
   (for-each
     (lambda (param)
-      (let* ((t (assoc 'type (ff->alist (ref param 2))))
+      (let* ((t  (xml-get-attribute param 'type #f))
              (type (if (pair? t) (cdr t) t)))
         (cond ((member type %convert-to-fft-enum) (display " fft-enum" port))
               ((equal? "const char *" type) (display " type-string" port))
@@ -90,14 +90,9 @@
 
 (print-to port ")(cond-expand (Linux (begin (define raylib (load-dynamic-library \"libraylib.so\")) (define raylib-err \"Use, for example, sudo apt install libraylib.so\"))) (else (runtime-error \"nsupported platform\" (uname)))) (begin (if (not raylib) (runtime-error \"Can't load raylib library.\" raylib-err))")
 
-;; Vector2 
-(print-to port) (print-to port "(define Vector2 (list fft-float fft-float))")
-
-;; Vector3 
-(print-to port) (print-to port "(define Vector3 (list fft-float fft-float fft-float))")
 
 ;; rgba->hex
-(print-to port) (print-to port "(define (rgba->hex r g b a) (+ (<< a 24) (<< b 16) (<< g 8) r))")
+(print-to port) (print-to port ";; RGBa->HEX helper\n(define (rgba->hex r g b a) (+ (<< a 24) (<< b 16) (<< g 8) r))")
 
 ;; Functions
 (print-to port) (print-to port ";;;; Functions")
@@ -115,15 +110,10 @@
 
 ;; Structs 
 (print-to port) (print-to port ";;;; Structs")
-(for-each (lambda (x) (let ((name (xml-get-attribute x 'name #f)) 
-                            (field (xml-get-subtags x 'Field )))
-                        (print-to port ";; " (xml-get-attribute x 'desc #f))
-                        (display-to port (string-append "(define " name ))
-                        (for-each (lambda (f) ;;(display-types-to port f)
-                                    (display (getf 'name f))
-
-                                    ) field)
-                        (print-to port "))"))) structs)
+(for-each (lambda (x) (print-to port ";; " (xml-get-attribute x 'desc #f))
+                        (display-to port (string-append "(define " (xml-get-attribute x 'name #f)))
+                        (display-to port " (list") (display-types-to port x) (print-to port "))")) 
+          structs)
 
 ;; Enums
 (print-to port) (print-to port ";;;; Enums")
