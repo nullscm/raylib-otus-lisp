@@ -43,6 +43,7 @@
         "bool"
         "BoundingBox"
         "Camera *"
+        "Color"
         "Color *"
         "const Matrix *"
         "FilePathList"
@@ -87,7 +88,7 @@
 (define %convert-to-struct
   (list "Camera2D"
         "Camera3D"
-        "Color"
+;;        "Color"
         "Ray"
         "Rectangle"
         "Shader"
