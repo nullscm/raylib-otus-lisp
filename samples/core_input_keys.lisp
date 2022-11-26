@@ -8,7 +8,7 @@
 (define screenWidth 800)
 (define screenHeight 450)
 
-(InitWindow screenWidth screenHeight "raylib [core] example - basic window")
+(InitWindow screenWidth screenHeight "raylib [core] example - keyboard input")
 (SetTargetFPS 60)
 
 ;; Main game loop
