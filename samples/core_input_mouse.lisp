@@ -7,26 +7,34 @@
 
 (define screenWidth 800)
 (define screenHeight 450)
-(define ballPosition (Vector2 -100 100))
-(define ballColor DARKBLUE)
+
 (InitWindow screenWidth screenHeight "raylib [core] example - mouse input")
 (SetTargetFPS 60)
 
 ;; Main game loop
-(let loop ((close (WindowShouldClose)))
-   (unless close
+(let loop ((color DARKBLUE))
+   (unless (WindowShouldClose)
       ;; Update
-      (let ((ballPosition (GetMousePosition))
-            (ballColor (cond ((IsMouseButtonPressed MOUSE_BUTTON_LEFT) LIME ))))
+      (define ballPosition (GetMousePosition))
+      (define ballColor (cond
+         ((IsMouseButtonPressed MOUSE_BUTTON_LEFT) MAROON)
+         ((IsMouseButtonPressed MOUSE_BUTTON_MIDDLE) LIME)
+         ((IsMouseButtonPressed MOUSE_BUTTON_RIGHT) DARKBLUE)
+         ((IsMouseButtonPressed MOUSE_BUTTON_SIDE) PURPLE)
+         ((IsMouseButtonPressed MOUSE_BUTTON_EXTRA) YELLOW)
+         ((IsMouseButtonPressed MOUSE_BUTTON_FORWARD) ORANGE)
+         ((IsMouseButtonPressed MOUSE_BUTTON_BACK) BEIGE)
+         (else color)))
+
       ;; Draw
       (BeginDrawing)
 
          (ClearBackground RAYWHITE)
-         (DrawText "move the ball with arrow keys" 10 10 20 DARKGRAY)
-         (DrawCircleV ballPosition 50 ballColor)
+         (DrawCircleV ballPosition 40 ballColor)
+         (DrawText "move ball with mouse and click mouse button(s) to change color" 10 10 20 DARKGRAY)
 
       (EndDrawing)
-      (loop (WindowShouldClose)))))
+      (loop ballColor)))
 
 ;; De-Initialization
 (CloseWindow) ; Close window and OpenGL context
