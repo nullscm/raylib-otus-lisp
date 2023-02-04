@@ -28,12 +28,14 @@
       (define attributes (ref func 2))
       (define refType (attributes 'retType ""))
       (or (string-eq? "void" refType)
+          (string-eq? "float" refType)
+          (string-eq? "const char *" refType)
           (string-eq? "Vector2" refType)
           (string-eq? "Vector3" refType)
           (string-eq? "bool" refType)))
     funcs))
 
-(define %convert-to-fft-enum (list "Ray" "Ray *" "Camera *" "Rectangle" "Texture2D" "Texture2D *" "GlyphInfo *" "GlyphInfo" "Camera" "Camera2D" "Camera3D" "Font" "Vector2 *" "Color" "Image *" "Image" "Vector3" "Mesh *" "Model" "BoundingBox" "ModelAnimation" "Model *" "ModelAnimation *" "Vector3 *" "Sound" "Wave" "Material" "Matrix" "Music" "AudioStream" "AudioCallback" "Color *" "Shader" "RenderTexture2D" "VrStereoConfig" "..." "Mesh" "TraceLogCallback" "SaveFileTextCallback" "Material *" "bool" "SaveFileDataCallback" "LoadFileTextCallback" "NPatchInfo" "Wave *" "const Matrix *" "LoadFileDataCallback" "FilePathList"))
+(define %convert-to-fft-enum (list "Ray" "Ray *" "Camera *" "Rectangle" "Texture2D" "Texture2D *" "GlyphInfo *" "GlyphInfo" "Camera" "Camera2D" "Camera3D" "Font" "Vector2 *" "Color" "Image *" "Image" "Vector3" "Mesh *" "Model" "BoundingBox" "ModelAnimation" "Model *" "ModelAnimation *" "Vector3 *" "Sound" "Wave" "Material" "Matrix" "Music" "AudioStream" "AudioCallback" "Color *" "Shader" "RenderTexture2D" "VrStereoConfig" "Mesh" "TraceLogCallback" "SaveFileTextCallback" "Material *" "bool" "SaveFileDataCallback" "LoadFileTextCallback" "NPatchInfo" "Wave *" "const Matrix *" "LoadFileDataCallback" "const char **" "FilePathList"))
 
 (define (display-types-to port lst)
   (for-each
@@ -42,7 +44,7 @@
              (type (if (pair? t) (cdr t) t)))
         (cond ((member type %convert-to-fft-enum) (display " fft-enum" port))
               ((equal? "const char *" type) (display " type-string" port))
-              ((equal? "float *" type) (display  " fft-float" port))
+              ((equal? "float *" type) (display  " fft-float*" port))
               ((equal? "void *" type) (display " fft-void*" port))
               ((equal? "const void *" type) (display " fft-void*" port))
               ((equal? "const int *" type) (display " fft-int*" port))
@@ -50,6 +52,7 @@
               ((equal? "char *" type) (display " fft-char" port))
               ((equal? "Vector2" type) (display " Vector2" port))
               ((equal? "Vector3" type) (display " Vector3" port))
+              ((equal? "..." type) #f) ; special case, don't print anything
               ((equal? "unsigned" (car (string-split type)))
                (display (string-append " fft-" (car (string-split type)) "-" (cadr (string-split type))) port))
               (else
@@ -85,6 +88,9 @@
 
 (print-to port ")(cond-expand (Linux (begin (define raylib (load-dynamic-library \"libraylib.so\")) (define raylib-err \"Use, for example, sudo apt install libraylib.so\"))) (else (runtime-error \"nsupported platform\" (uname)))) (begin (if (not raylib) (runtime-error \"Can't load raylib library.\" raylib-err))")
 
+;; Common Pointers
+(print-to port) (print-to port "(define fft-float* (fft* fft-float))")
+
 ;; Vector2 
 (print-to port) (print-to port "(define Vector2 (list fft-float fft-float))")
 
@@ -101,8 +107,11 @@
                         (print-to port ";; " (xml-get-attribute x 'desc #f))
                         (display-to port (string-append "(define " name " (raylib "))
                         (cond ((or (equal? retType "void")
-                                   (equal? retType "bool"))
-                               (display-to port (string-append "fft-" retType))) 
+                                   (equal? retType "bool")
+                                   (equal? retType "float"))
+                               (display-to port (string-append "fft-" retType)))
+                              ((equal? retType "const char *")
+                               (display-to port "type-string"))
                               (else (display-to port retType)))
                         (display-to port  (string-append " \"" name "\""))
                         (display-types-to port x) (print-to port "))")))
