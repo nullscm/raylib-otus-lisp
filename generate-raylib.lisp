@@ -31,6 +31,8 @@
           (string-eq? "float" refType)
           (string-eq? "const char *" refType)
           (string-eq? "Vector2" refType)
+          (string-eq? "AutomationEventList" refType)
+
           (string-eq? "Vector3" refType)
           (string-eq? "bool" refType)))
     funcs))
@@ -44,6 +46,7 @@
              (type (if (pair? t) (cdr t) t)))
         (cond ((member type %convert-to-fft-enum) (display " fft-enum" port))
               ((equal? "const char *" type) (display " type-string" port))
+              ((equal? "const unsigned char *" type) (display " type-string" port))
               ((equal? "float *" type) (display  " fft-float*" port))
               ((equal? "void *" type) (display " fft-void*" port))
               ((equal? "const void *" type) (display " fft-void*" port))
@@ -51,6 +54,9 @@
               ((equal? "int *" type) (display " fft-int*" port))
               ((equal? "char *" type) (display " fft-char" port))
               ((equal? "Vector2" type) (display " Vector2" port))
+              ((equal? "AutomationEvent" type) (display " AutomationEvent" port))
+              ((equal? "AutomationEventList *" type) (display " AutomationEventList" port))
+              ((equal? "AutomationEventList" type) (display " AutomationEventList" port))
               ((equal? "Vector3" type) (display " Vector3" port))
               ((equal? "..." type) #f) ; special case, don't print anything
               ((equal? "unsigned" (car (string-split type)))
@@ -82,6 +88,9 @@
 (print-to port "rgba->hex")
 (print-to port "Vector2")
 (print-to port "Vector3")
+(print-to port "AutomationEventList")
+(print-to port "AutomationEvent")
+
 
 ;; Functionnames
 (for-each (lambda (func) (print-to port (xml-get-attribute func 'name ""))) funcs)
@@ -99,6 +108,13 @@
 
 ;; rgba->hex
 (print-to port) (print-to port "(define (rgba->hex r g b a) (+ (<< a 24) (<< b 16) (<< g 8) r))")
+
+;; AutomationEvent 
+(print-to port) (print-to port "(define AutomationEvent (list fft-int fft-int))")
+
+;; AutomationEventList
+(print-to port) (print-to port "(define AutomationEventList (list fft-int fft-int AutomationEvent))")
+
 
 ;; Functions
 (print-to port) (print-to port ";;;; Functions")
