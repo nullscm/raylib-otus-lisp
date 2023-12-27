@@ -73,7 +73,6 @@
           enums)
 ;;Structs
 (for-each (lambda (struct) (print-to port (xml-get-attribute struct 'name ""))) structs)
-(print-to port "rgba->hex")
 ;; Functionnames
 (for-each (lambda (func) (print-to port (xml-get-attribute func 'name ""))) funcs)
 (print-to port ")(cond-expand (Linux (begin (define raylib (load-dynamic-library \"libraylib.so\")) (define raylib-err \"Use, for example, sudo apt install libraylib.so\"))) (else (runtime-error \"unsupported platform\" (uname)))) (begin (if (not raylib) (runtime-error \"Can't load raylib library.\" raylib-err))")
@@ -86,8 +85,6 @@
 (print-to port "(define fft-double* (fft* fft-double))")
 ;;(print-to port "(define fft-long* (fft* fft-long))")
 ;;(print-to port "(define fft-short* (fft* fft-short))")
-;; rgba->hex
-(print-to port "(define (rgba->hex r g b a) (+ (<< a 24) (<< b 16) (<< g 8) r))")
 ;; Structs 
 (print-to port) (print-to port ";;;; Structs")
 (for-each (lambda (x) (let ((name (xml-get-attribute x 'name #f)) 
@@ -125,7 +122,7 @@
 (for-each 
   (lambda (define)
     (cond ((equal? "COLOR" (xml-get-attribute define 'type #f))
-           (print-to port "(define " (xml-get-attribute define 'name #f) " (rgba->hex " 
+           (print-to port "(define " (xml-get-attribute define 'name #f) " (list " 
                      (filter-numbers (xml-get-attribute define 'value #f)) "))")))) 
   defines)
 (display "))" port)
