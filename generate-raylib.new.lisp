@@ -82,7 +82,9 @@
 (print "(define-library (lib raylib)
 (import (otus lisp) (otus ffi))
 (begin
-(setq RAYLIB (load-dynamic-library \"libraylib.so\"))
+(setq RAYLIB (or
+   (load-dynamic-library \"libraylib.so\")
+   (load-dynamic-library \"raylib.dll\")))
 ")
 
 (print ";; enums")
